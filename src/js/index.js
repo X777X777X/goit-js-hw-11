@@ -9,6 +9,7 @@ const gallery = document.querySelector('.gallery');
 let query = '';
 let page = 1;
 let simpleLightbox;
+let totalPages;
 const perPage = 40;
 
 searchForm.addEventListener('submit', onSearchForm);
@@ -60,6 +61,16 @@ function renderGallery(images) {
   });
 }
 
+// Спинер
+
+function showSpinner() {
+  Notiflix.Loading.dots('Loading...');
+}
+
+function hideSpinner() {
+  Notiflix.Loading.remove();
+}
+
 function onSearchForm(e) {
   e.preventDefault();
   page = 1;
@@ -73,39 +84,44 @@ function onSearchForm(e) {
     return;
   }
 
+  showSpinner();
+
   fetchImages(query, page, perPage)
     .then(data => {
+      hideSpinner();
       if (data.totallHits === 0) {
         Notiflix.Notify.failure(
           'We are sorry, but you have reached the end of search results.'
         );
       } else {
+        totalPages = Math.ceil(data.totalHits / perPage);
         renderGallery(data.hits);
         simpleLightbox = new SimpleLightbox('.gallery a').refresh();
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
       }
-      console.log(
-        '🚀 ~ file: index.js:84 ~ fetchImages ~ data.hits:',
-        data.hits
-      );
     })
-    .catch(error => console.log(error))
+    .catch(error => {
+      hideSpinner();
+      console.log(error);
+    })
     .finally(() => {
       searchForm.reset();
     });
 }
 
 function onLoadMore() {
-
   page += 1;
   simpleLightbox.destroy();
+  showSpinner();
 
   fetchImages(query, page, perPage)
     .then(data => {
+      hideSpinner();
+      if (page > totalPages) {
+        return;
+      }
       renderGallery(data.hits);
       simpleLightbox = new SimpleLightbox('.gallery a').refresh();
-
-      const totalPages = Math.ceil(data.totalHits / perPage);
 
       if (page > totalPages) {
         Notiflix.Notify.failure(
@@ -113,7 +129,10 @@ function onLoadMore() {
         );
       }
     })
-    .catch(error => console.log(error))
+    .catch(error => {
+      hideSpinner();
+      console.log(error);
+    });
 }
 
 function checkIfEndOfPage() {
@@ -126,7 +145,7 @@ function checkIfEndOfPage() {
 // Когда дошел до конца страницы
 
 function showLoadMorePage() {
-  if (checkIfEndOfPage()) {
+  if (page < totalPages && checkIfEndOfPage()) {
     onLoadMore();
   }
 }
@@ -142,4 +161,3 @@ arrowTop.onclick = function () {
 window.addEventListener('scroll', function () {
   arrowTop.hidden = scrollY < this.document.documentElement.clientHeight;
 });
-
