@@ -63,55 +63,48 @@ function renderGallery(images) {
 function onSearchForm(e) {
   e.preventDefault();
   page = 1;
-  query = e.currentTarget.elements.searchQuery.value.trim();
-  gallery.innerHTML = '';
+    query = e.currentTarget.elements.searchQuery.value.trim();
+    gallery.innerHTML = '';
 
-  if (query === '') {
-    Notiflix.Notify.failure(
-      'The search string cannot be empty. Please specify your search query.'
-    );
-    return;
-  }
-
-  fetchImages(query, page, perPage)
-    .then(data => {
-      if (data.totallHits === 0) {
+    if (query === '') {
         Notiflix.Notify.failure(
-          'We are sorry, but you have reached the end of search results.'
+          'The search string cannot be empty. Please specify your search query.',
         );
-      } else {
-        renderGallery(data.hits);
-        simpleLightbox = new SimpleLightbox('.gallery a').refresh();
-        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-      }
-    })
-    .catch(error => console.log(error))
-    .finally(() => {
-      searchForm.reset();
+        return;
+    }
+
+    fetchImages(query, page, perPage).then(data => {
+        if (data.totallHits === 0) {
+            Notiflix.Notify.failure('We are sorry, but you have reached the end of search results.',);
+        } else {
+            renderGallery(data.hits);
+            simpleLightbox = new SimpleLightbox('.gallery a').refresh();
+            Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+        }
+    }).catch(error => console.log(error)).finally(() => {
+        searchForm.reset();
     });
 }
 
 function onLoadMore() {
-  page += 1;
-  simpleLightbox.destroy();
+    page += 1;
+    simpleLightbox.destroy();
 
-  fetchImages(query, page, perPage)
-    .then(data => {
-      renderGallery(data.hits);
-      simpleLightbox = new SimpleLightbox('.gallery a').refresh();
+    fetchImages(query, page, perPage).then(data => {
+        renderGallery(data.hits);
+        simpleLightbox = new SimpleLightbox('.gallery a').refresh();
 
-      const totalPages = Math.ceil(data.totalHits / perPage);
+        const totalPages = Math.ceil(data.totalHits / perPage);
 
-      if (page > totalPages) {
-        Notiflix.Notify.failure(
-          "We're sorry, but you've reached the end of search results."
-        );
-      }
-    })
-    .catch(error => console.log(error));
+        if (page > totalPages) {
+            Notiflix.Notify.failure(
+                "We're sorry, but you've reached the end of search results.",
+            );
+        }
+    }).catch(error => console.log(error));
 }
 
-function checkIfEndPage() {
+function checkIfEndOfPage() {
   return (
     window.innerHeight + window.pageYOffset >=
     document.documentElement.scrollHeight
@@ -121,9 +114,9 @@ function checkIfEndPage() {
 // Когда дошел до конца страницы
 
 function showLoadMorePage() {
-  if (checkIfEndPage()) {
-    onLoadMore();
-  }
+    if (checkIfEndOfPage()) {
+      onLoadMore();
+    }
 }
 
 window.addEventListener('scroll', showLoadMorePage);
@@ -131,9 +124,9 @@ window.addEventListener('scroll', showLoadMorePage);
 // Кнопка вверх
 
 arrowTop.onclick = function () {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.addEventListener('scroll', function () {
-  arrowTop.hidden = scrollY < this.document.documentElement.clientHeight;
+    arrowTop.hidden = scrollY < this.document.documentElement.clientHeight;
 });
