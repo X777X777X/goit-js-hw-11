@@ -1,5 +1,5 @@
 import Notiflix from 'notiflix';
-import simpleLightbox from 'simplelightbox';
+import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { fetchImages } from './fatchimages';
 
@@ -63,45 +63,57 @@ function renderGallery(images) {
 function onSearchForm(e) {
   e.preventDefault();
   page = 1;
-    query = e.currentTarget.elements.searchQuery.value.trim();
-    gallery.innerHTML = '';
+  query = e.currentTarget.elements.searchQuery.value.trim();
+  gallery.innerHTML = '';
 
-    if (query === '') {
+  if (query === '') {
+    Notiflix.Notify.failure(
+      'The search string cannot be empty. Please specify your search query.'
+    );
+    return;
+  }
+
+  fetchImages(query, page, perPage)
+    .then(data => {
+      if (data.totallHits === 0) {
         Notiflix.Notify.failure(
-          'The search string cannot be empty. Please specify your search query.',
+          'We are sorry, but you have reached the end of search results.'
         );
-        return;
-    }
-
-    fetchImages(query, page, perPage).then(data => {
-        if (data.totallHits === 0) {
-            Notiflix.Notify.failure('We are sorry, but you have reached the end of search results.',);
-        } else {
-            renderGallery(data.hits);
-            simpleLightbox = new SimpleLightbox('.gallery a').refresh();
-            Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-        }
-    }).catch(error => console.log(error)).finally(() => {
-        searchForm.reset();
+      } else {
+        renderGallery(data.hits);
+        simpleLightbox = new SimpleLightbox('.gallery a').refresh();
+        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+      }
+      console.log(
+        '🚀 ~ file: index.js:84 ~ fetchImages ~ data.hits:',
+        data.hits
+      );
+    })
+    .catch(error => console.log(error))
+    .finally(() => {
+      searchForm.reset();
     });
 }
 
 function onLoadMore() {
-    page += 1;
-    simpleLightbox.destroy();
 
-    fetchImages(query, page, perPage).then(data => {
-        renderGallery(data.hits);
-        simpleLightbox = new SimpleLightbox('.gallery a').refresh();
+  page += 1;
+  simpleLightbox.destroy();
 
-        const totalPages = Math.ceil(data.totalHits / perPage);
+  fetchImages(query, page, perPage)
+    .then(data => {
+      renderGallery(data.hits);
+      simpleLightbox = new SimpleLightbox('.gallery a').refresh();
 
-        if (page > totalPages) {
-            Notiflix.Notify.failure(
-                "We're sorry, but you've reached the end of search results.",
-            );
-        }
-    }).catch(error => console.log(error));
+      const totalPages = Math.ceil(data.totalHits / perPage);
+
+      if (page > totalPages) {
+        Notiflix.Notify.failure(
+          "We're sorry, but you've reached the end of search results."
+        );
+      }
+    })
+    .catch(error => console.log(error))
 }
 
 function checkIfEndOfPage() {
@@ -114,9 +126,9 @@ function checkIfEndOfPage() {
 // Когда дошел до конца страницы
 
 function showLoadMorePage() {
-    if (checkIfEndOfPage()) {
-      onLoadMore();
-    }
+  if (checkIfEndOfPage()) {
+    onLoadMore();
+  }
 }
 
 window.addEventListener('scroll', showLoadMorePage);
@@ -124,9 +136,10 @@ window.addEventListener('scroll', showLoadMorePage);
 // Кнопка вверх
 
 arrowTop.onclick = function () {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.addEventListener('scroll', function () {
-    arrowTop.hidden = scrollY < this.document.documentElement.clientHeight;
+  arrowTop.hidden = scrollY < this.document.documentElement.clientHeight;
 });
+
